@@ -17,7 +17,7 @@ public class TcpSocketServer {
 	public void  turnOn() throws IOException{
 		bServerSwitch=true;
 		while(bServerSwitch){
-			System.out.println("Waitting for Clients");
+			System.out.println("Server:>>>>>>>>>>Waitting for Clients");
 			Socket socket = mServerSocket.accept();
 			new SocketThread(socket).start();
 		}
@@ -50,19 +50,25 @@ public class TcpSocketServer {
 			try {
 				oStream=mSocket.getOutputStream();
 				iStream=mSocket.getInputStream();
-				int byteLenght=0;
-				StringBuilder sb=new StringBuilder();
+				int len=0;
+				int index=0;
+				StringBuffer sb=new StringBuffer();
 				byte[] b=new byte[1024]; 
-				while((byteLenght=iStream.read(b))!=-1){
-					System.out.println("byteLenght = "+byteLenght);
-					sb.append(b.toString());
-					System.out.println("server Recived over: "+sb.toString());
-					oStream.write(sb.toString().getBytes());
-					System.out.println("server replied over: "+sb.toString());
+				while((len=iStream.read(b))!=-1){
 					
+					System.out.println("byteLenght = "+len);
+					String tmp= new String(b,0,len);
+					if((index=tmp.indexOf("eof"))!=-1){
+						sb.append(tmp,0,index);
+						break;
+					}
+					sb.append(tmp,0,len);
 				};
 				
-
+				oStream.write(sb.toString().getBytes());
+				oStream.write("eof".getBytes());
+				oStream.flush();
+				System.out.println("server replied over: "+sb);
 				oStream.close();
 				iStream.close();
 				mSocket.close();
