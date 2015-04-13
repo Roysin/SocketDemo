@@ -1,4 +1,9 @@
 package zangyakui.pc2moblieSnapScreen.org;
+import java.io.BufferedInputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -36,7 +41,7 @@ public class TcpSocketServer {
 	
 	class SocketThread extends Thread{
 		Socket mSocket;
-		OutputStream oStream;
+		DataOutputStream oStream;
 		InputStream iStream;
 		
 		public SocketThread(Socket socket){
@@ -48,27 +53,41 @@ public class TcpSocketServer {
 			super.run();
 			System.out.println("SocketThread is running");
 			try {
-				oStream=mSocket.getOutputStream();
+				oStream=new DataOutputStream(mSocket.getOutputStream());
 				iStream=mSocket.getInputStream();
-				int len=0;
-				int index=0;
-				StringBuffer sb=new StringBuffer();
-				byte[] b=new byte[1024]; 
-				while((len=iStream.read(b))!=-1){
-					
-					System.out.println("byteLenght = "+len);
-					String tmp= new String(b,0,len);
-					if((index=tmp.indexOf("eof"))!=-1){
-						sb.append(tmp,0,index);
-						break;
-					}
-					sb.append(tmp,0,len);
-				};
 				
-				oStream.write(sb.toString().getBytes());
+				File f=new File("e:/tosent.png");
+				DataInputStream dis=new DataInputStream(new BufferedInputStream(new FileInputStream(f)));
+				
+				int bufferSize=8192;
+				byte[] buffer=new byte[bufferSize];
+				int len=0;
+				if(f!=null){
+					while((len=dis.read(buffer, 0, bufferSize))!=-1){
+						oStream.write(buffer,0,len);
+//						oStream.flush();
+					}	
+				}
+				
+//				int len=0;
+//				int index=0;
+//				StringBuffer sb=new StringBuffer();
+//				byte[] b=new byte[1024]; 
+//				while((len=iStream.read(b))!=-1){
+//					
+//					System.out.println("byteLenght = "+len);
+//					String tmp= new String(b,0,len);
+//					if((index=tmp.indexOf("eof"))!=-1){
+//						sb.append(tmp,0,index);
+//						break;
+//					}
+//					sb.append(tmp,0,len);
+//				};
+//				
+//				oStream.write(sb.toString().getBytes());
 				oStream.write("eof".getBytes());
 				oStream.flush();
-				System.out.println("server replied over: "+sb);
+				dis.close();
 				oStream.close();
 				iStream.close();
 				mSocket.close();
